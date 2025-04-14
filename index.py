@@ -1,9 +1,13 @@
 import requests
 from bs4 import BeautifulSoup
+import threading
+from concurrent.futures import ThreadPoolExecutor
+from queue import Queue
 
 class ComicScraper:
-    def __init__(self, url):
+    def __init__(self, url, max_threads=8):
         self.url = url
+        self.max_threads = max_threads
     
     def scrapeChapters(self):
         """
@@ -38,9 +42,18 @@ class ComicScraper:
             
             print(f"Found {len(chapters)} chapters.")
             
-            # For each chapter, scrape all pages
-            for chapter in chapters:
-                chapter['pages'] = self.scrapePages(chapter['url'])
+            # Use ThreadPoolExecutor to scrape pages in parallel
+            with ThreadPoolExecutor(max_workers=self.max_threads) as executor:
+                # Create a dictionary to store results with chapter index as key
+                results = {}
+                # Submit tasks to the executor
+                for i, chapter in enumerate(chapters):
+                    future = executor.submit(self.scrapePages, chapter['url'])
+                    results[i] = future
+                
+                # Collect results as they complete
+                for i, future in results.items():
+                    chapters[i]['pages'] = future.result()
                 
             return chapters
         else:
@@ -69,16 +82,28 @@ class ComicScraper:
                 if a_tag.find('div', class_='archive-comic'):
                     pages_el.append(a_tag)
             
-            # Extract pages URLs
+            # Extract pages URLs without images first
             for element in pages_el:
                 page_url = element['href']
                 title = element.find('span').text.strip() if element.find('span') else ''
                 # Check if the URL is relative and prepend the base URL if necessary
                 if page_url.startswith('/'):
                     page_url = 'https://comicfury.com' + page_url
-                img_url = self.scrapeImage(page_url)       
-                # Append the page URL to the list
-                pages.append({"page_url": page_url, "page_title": title, "img_url": img_url})
+                # Add page without image URL for now
+                pages.append({"page_url": page_url, "page_title": title, "img_url": None})
+            
+            # Use threads to scrape images in parallel
+            with ThreadPoolExecutor(max_workers=self.max_threads) as executor:
+                # Create a dictionary to store results with page index as key
+                results = {}
+                # Submit tasks to the executor
+                for i, page in enumerate(pages):
+                    future = executor.submit(self.scrapeImage, page['page_url'])
+                    results[i] = future
+                
+                # Collect results as they complete
+                for i, future in results.items():
+                    pages[i]['img_url'] = future.result()
             
             print(f"Found {len(pages)} pages in chapter.")
             return pages
@@ -106,6 +131,7 @@ class ComicScraper:
                 # Check if the image URL starts with the desired prefix
                 if img_url.startswith('https://img.comicfury.com/comics/'):
                     return img_url
+            return None
         else:
             print(f"Failed to retrieve the page. Status code: {response.status_code}")
-            return []
+            return None

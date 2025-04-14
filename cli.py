@@ -9,6 +9,7 @@ def main():
     parser = argparse.ArgumentParser(description="Comic web scraper CLI")
     parser.add_argument("-u", "--url", required=False, help="URL of the webpage to scrape")
     parser.add_argument("-i", "--id", required=False, help="Id of the comic to scrape")
+    parser.add_argument("-t", "--max-threads", type=int, default=8, help="Maximum number of threads to use (default: 8)")
     
     # Parse arguments
     args = parser.parse_args()
@@ -22,8 +23,8 @@ def main():
     else:
         url = args.url
     
-    # Create a scraper instance
-    scraper = ComicScraper(url)
+    # Create a scraper instance with specified max threads
+    scraper = ComicScraper(url, max_threads=args.max_threads)
     chapters = scraper.scrapeChapters()
     
     # Write chapters to a json file with indentation
