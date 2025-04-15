@@ -1,13 +1,12 @@
-import requests
+import requests, re, shutil, os, zipfile
 from bs4 import BeautifulSoup
-import threading
 from concurrent.futures import ThreadPoolExecutor
-from queue import Queue
 
 class ComicScraper:
     def __init__(self, url, max_threads=8):
         self.url = url
         self.max_threads = max_threads
+        self.download_dir = "downloads"  # Base directory for downloads
     
     def scrapeChapters(self):
         """
@@ -135,3 +134,105 @@ class ComicScraper:
         else:
             print(f"Failed to retrieve the page. Status code: {response.status_code}")
             return None
+    
+    def download_chapters(self, chapters):
+        """
+        Downloads all chapters one by one and creates CBZ files
+        """
+        print("Starting sequential download of all chapters...")
+        
+        # Create base download directory if it doesn't exist
+        if not os.path.exists(self.download_dir):
+            os.makedirs(self.download_dir)
+            
+        # Download chapters one by one
+        total_chapters = len(chapters)
+        for i, chapter in enumerate(chapters):
+            print(f"\nProcessing chapter {i+1} of {total_chapters}: {chapter['title']}")
+            # Pass the chapter index to use for ordering
+            self.download_chapter(chapter, chapter_index=i+1, total_chapters=total_chapters)
+                
+        print("\nAll chapters downloaded and packaged as CBZ files.")
+    
+    def download_chapter(self, chapter, chapter_index=1, total_chapters=1):
+        """
+        Downloads a single chapter and creates a CBZ file with a number prefix for ordering
+        """
+        if not chapter.get('pages'):
+            print(f"No pages found for chapter: {chapter['title']}")
+            return
+            
+        # Create a safe filename from chapter title
+        safe_title = self.get_safe_filename(chapter['title'])
+        chapter_dir = os.path.join(self.download_dir, safe_title)
+        
+        # Create chapter directory
+        if os.path.exists(chapter_dir):
+            shutil.rmtree(chapter_dir)  # Remove if exists to start fresh
+        os.makedirs(chapter_dir)
+        
+        print(f"Downloading chapter: {chapter['title']}")
+        
+        # Download all pages in the chapter
+        with ThreadPoolExecutor(max_workers=self.max_threads) as executor:
+            futures = []
+            for i, page in enumerate(chapter['pages']):
+                if page['img_url']:
+                    # Use zero-padded index to ensure correct order
+                    page_filename = f"{i:03d}.jpg"
+                    page_path = os.path.join(chapter_dir, page_filename)
+                    futures.append(executor.submit(self.download_image, page['img_url'], page_path))
+            
+            # Wait for all downloads to complete
+            for future in futures:
+                future.result()
+        
+        # Determine the number of digits needed for proper zero-padding
+        digits = len(str(total_chapters))
+        
+        # Create CBZ file with number prefix for proper ordering
+        cbz_filename = f"{chapter_index:0{digits}d}_{safe_title}.cbz"
+        cbz_path = os.path.join(self.download_dir, cbz_filename)
+        
+        print(f"Creating CBZ file: {cbz_filename}")
+        with zipfile.ZipFile(cbz_path, 'w') as zipf:
+            for file in sorted(os.listdir(chapter_dir)):
+                file_path = os.path.join(chapter_dir, file)
+                if os.path.isfile(file_path):
+                    zipf.write(file_path, os.path.basename(file_path))
+        
+        # Remove the temporary directory
+        shutil.rmtree(chapter_dir)
+        
+        print(f"Completed: {cbz_filename}")
+    
+    def download_image(self, img_url, save_path):
+        """
+        Downloads an image from a URL and saves it to the specified path
+        """
+        try:
+            response = requests.get(img_url, stream=True)
+            if response.status_code == 200:
+                with open(save_path, 'wb') as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
+                return True
+            else:
+                print(f"Failed to download image: {img_url}. Status code: {response.status_code}")
+                return False
+        except Exception as e:
+            print(f"Error downloading image {img_url}: {str(e)}")
+            return False
+    
+    def get_safe_filename(self, filename):
+        """
+        Converts a string to a safe filename by removing invalid characters
+        """
+        # Remove invalid filename characters and replace spaces with underscores
+        safe_name = re.sub(r'[\\/*?:"<>|]', "", filename)
+        safe_name = safe_name.replace(' ', '_')
+        # Ensure filename isn't too long
+        if len(safe_name) > 100:
+            safe_name = safe_name[:100]
+        return safe_name

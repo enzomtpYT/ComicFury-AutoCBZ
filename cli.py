@@ -1,7 +1,4 @@
-#!/usr/bin/env python3
-import argparse
-import sys
-import json
+import argparse, sys, json
 from index import ComicScraper
 
 def main():
@@ -9,7 +6,8 @@ def main():
     parser = argparse.ArgumentParser(description="Comic web scraper CLI")
     parser.add_argument("-u", "--url", required=False, help="URL of the webpage to scrape")
     parser.add_argument("-i", "--id", required=False, help="Id of the comic to scrape")
-    parser.add_argument("-t", "--max-threads", type=int, default=8, help="Maximum number of threads to use (default: 8)")
+    parser.add_argument("-t", "--max-threads", type=int, default=4, help="Maximum number of threads to use (default: 4)")
+    parser.add_argument("-d", "--download", action="store_true", help="Download the comic and create CBZ files")
     
     # Parse arguments
     args = parser.parse_args()
@@ -27,9 +25,17 @@ def main():
     scraper = ComicScraper(url, max_threads=args.max_threads)
     chapters = scraper.scrapeChapters()
     
-    # Write chapters to a json file with indentation
-    with open('chapters.json', 'w') as f:
-        json.dump(chapters, f, indent=4)
+    # Write chapters to a json file with indentation only if not downloading
+    if not args.download:
+        with open('chapters.json', 'w') as f:
+            json.dump(chapters, f, indent=4)
+        print("Chapter information saved to chapters.json")
+    
+    # If download flag is set, download all chapters and create CBZ files
+    if args.download:
+        print("Download flag detected. Downloading chapters and creating CBZ files...")
+        scraper.download_chapters(chapters)
+        print(f"All chapters have been downloaded to the '{scraper.download_dir}' directory.")
     
     return 0
 
