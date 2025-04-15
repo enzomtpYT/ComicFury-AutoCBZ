@@ -8,6 +8,8 @@ def main():
     parser.add_argument("-i", "--id", required=False, help="Id of the comic to scrape")
     parser.add_argument("-t", "--max-threads", type=int, default=4, help="Maximum number of threads to use (default: 4)")
     parser.add_argument("-d", "--download", action="store_true", help="Download the comic and create CBZ files")
+    parser.add_argument("-o", "--output", required=False, help="Output directory for downloaded files")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")
     
     # Parse arguments
     args = parser.parse_args()
@@ -21,8 +23,8 @@ def main():
     else:
         url = args.url
     
-    # Create a scraper instance with specified max threads
-    scraper = ComicScraper(url, max_threads=args.max_threads)
+    # Create a scraper instance with specified max threads and verbose setting
+    scraper = ComicScraper(url, max_threads=args.max_threads, download_dir=args.output, verbose=args.verbose, id=args.id)
     chapters = scraper.scrapeChapters()
     
     # Write chapters to a json file with indentation only if not downloading

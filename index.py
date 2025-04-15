@@ -3,10 +3,19 @@ from bs4 import BeautifulSoup
 from concurrent.futures import ThreadPoolExecutor
 
 class ComicScraper:
-    def __init__(self, url, max_threads=8):
+    def __init__(self, url, max_threads=8, download_dir="downloads", verbose=False, id=None):
         self.url = url
         self.max_threads = max_threads
-        self.download_dir = "downloads"  # Base directory for downloads
+        self.download_dir = download_dir or f"{id}"
+        self.verbose = verbose
+        self.id = id
+    
+    def log(self, message):
+        """
+        Print message only if verbose is enabled
+        """
+        if self.verbose:
+            print(message)
     
     def scrapeChapters(self):
         """
@@ -63,7 +72,7 @@ class ComicScraper:
         """
         Scrapes all pages from a chapter and returns a list of page URLs
         """
-        print(f"Scraping pages from chapter: {chapter_url}")
+        self.log(f"Scraping pages from chapter: {chapter_url}")
         
         # Send a GET request to the chapter URL
         response = requests.get(chapter_url)
@@ -114,7 +123,7 @@ class ComicScraper:
         """
         Scrapes all images from a page and returns a list of image URLs
         """
-        print(f"Scraping images from page: {page_url}")
+        self.log(f"Scraping images from page: {page_url}")
         
         # Send a GET request to the page URL
         response = requests.get(page_url)
