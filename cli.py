@@ -2,6 +2,8 @@ import argparse, sys, json
 from index import ComicScraper
 
 def main():
+    print("Comic Scraper CLI V1.0 by enzomtpYT\n\n")
+    
     # Create argument parser
     parser = argparse.ArgumentParser(description="Comic web scraper CLI")
     parser.add_argument("-u", "--url", required=False, help="URL of the webpage to scrape")
