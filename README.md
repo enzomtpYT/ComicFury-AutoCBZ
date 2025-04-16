@@ -10,6 +10,7 @@ A powerful command-line tool to scrape and download comics from ComicFury.com, c
 - Simple command-line interface with multiple options
 - Support for both URL and comic ID input methods
 - Configurable output directories
+- Use existing JSON files for faster downloads without re-scraping
 
 ## Installation
 
@@ -106,6 +107,7 @@ comicfuryscraper -i COMIC_ID -d
 | `-d, --download` | Download the comic and create CBZ files |
 | `-o, --output` | Output directory for downloaded files |
 | `-v, --verbose` | Enable verbose output |
+| `-j, --json` | Path to a JSON file with chapter data (skips scraping) |
 
 ### Examples
 
@@ -115,7 +117,7 @@ comicfuryscraper -i COMIC_ID -d
 python cli.py -i yourcomicid
 ```
 
-This will generate a `chapters.json` file with all chapters and pages information.
+This will generate a `yourcomicid-chapters.json` file with all chapters and pages information.
 
 2. Download a comic using its ID and save to a specific folder:
 
@@ -126,7 +128,7 @@ python cli.py -i yourcomicid -d -o "My Comics/ComicName"
 3. Download a comic using its URL with verbose output:
 
 ```
-python cli.py -u "https://comicfury.com/read/yourcomicid/archive" -d -v
+python cli.py -u "https://comicfury.com/comicprofile.php?url=yourcomicid" -d -v
 ```
 
 4. Increase download speed by using more threads:
@@ -135,14 +137,29 @@ python cli.py -u "https://comicfury.com/read/yourcomicid/archive" -d -v
 python cli.py -i yourcomicid -d -t 8
 ```
 
+5. Use a previously generated JSON file to download without scraping:
+
+```
+python cli.py -j yourcomicid-chapters.json -d
+```
+
+6. Download a comic using an existing JSON file and save to a specific directory:
+
+```
+python cli.py -j yourcomicid-chapters.json -d -o "My Comics/ComicName"
+```
+
 ## How It Works
 
-1. The scraper first extracts all chapters from the comic's archive page
-2. For each chapter, it finds all pages and their image URLs
-3. When downloading, it creates a temporary directory for each chapter
-4. Images are downloaded with proper ordering (001.jpg, 002.jpg, etc.)
-5. A CBZ file is created for each chapter with numbered prefixes for proper ordering
-6. Temporary directories are cleaned up automatically
+1. The scraper first checks if a JSON file with chapter data exists
+   - If specified with `-j` flag, it uses that file
+   - Otherwise, it looks for a default file named `[comic-id]-chapters.json`
+2. If no JSON file is found, it scrapes all chapters from the comic's archive page
+3. For each chapter, it finds all pages and their image URLs
+4. When downloading, it creates a temporary directory for each chapter
+5. Images are downloaded with proper ordering (001.jpg, 002.jpg, etc.)
+6. A CBZ file is created for each chapter with numbered prefixes for proper ordering
+7. Temporary directories are cleaned up automatically
 
 ## Output
 

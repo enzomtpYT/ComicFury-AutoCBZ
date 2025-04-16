@@ -1,14 +1,15 @@
-import requests, re, shutil, os, zipfile
+import requests, re, shutil, os, zipfile, json
 from bs4 import BeautifulSoup
 from concurrent.futures import ThreadPoolExecutor
 
 class ComicScraper:
-    def __init__(self, url, max_threads=8, download_dir="downloads", verbose=False, id=None):
+    def __init__(self, url, max_threads=4, download_dir="downloads", verbose=False, id=None):
         self.url = url
         self.max_threads = max_threads
         self.download_dir = download_dir or f"{id}"
         self.verbose = verbose
         self.id = id
+        self.json_path = f"{id}-chapters.json" if id else "chapters.json"
     
     def log(self, message):
         """
@@ -17,10 +18,34 @@ class ComicScraper:
         if self.verbose:
             print(message)
     
+    def load_chapters_from_json(self):
+        """
+        Attempts to load chapters from a JSON file if it exists
+        Returns the chapters if successful, None otherwise
+        """
+        if os.path.exists(self.json_path):
+            try:
+                print(f"Found existing chapters JSON file: {self.json_path}")
+                with open(self.json_path, 'r') as f:
+                    chapters = json.load(f)
+                print(f"Loaded {len(chapters)} chapters from JSON file.")
+                return chapters
+            except Exception as e:
+                print(f"Error loading chapters from JSON: {str(e)}")
+                return None
+        return None
+    
     def scrapeChapters(self):
         """
         Scrapes the comic page and returns a list of chapters with their titles and URLs
+        If a JSON file with chapters data exists, loads from there instead
         """
+        # Try to load chapters from JSON first
+        chapters = self.load_chapters_from_json()
+        if chapters is not None:
+            return chapters
+            
+        # If no JSON file or loading failed, scrape from website
         print(f"Scraping chapters from: {self.url}")
         
         # Send a GET request to the URL
