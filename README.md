@@ -33,7 +33,7 @@ A powerful command-line tool to scrape and download comics from ComicFury.com, c
 1. Clone this repository or download the source code:
 
 ```
-git clone https://github.com/yourusername/ComicsInfiniteScroll.git
+git clone https://github.com/enzomtpYT/ComicFury-AutoCBZ.git
 cd ComicsInfiniteScroll
 ```
 

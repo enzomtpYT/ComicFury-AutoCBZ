@@ -10,6 +10,24 @@ dependencies = [
     "requests",
     "beautifulsoup4"
 ]
+urls = {repository = "https://github.com/enzomtpYT/ComicFury-AutoCBZ"}
+keywords = [
+    "python",
+    "scraper",
+    "downloader",
+    "download",
+    "images",
+    "comic",
+    "comics",
+    "batch", 
+    "comic-downloader",
+    "scrape",
+    "bulk",
+    "cbz",
+    "comic-scraper",
+    "comicfury",
+    "comicpress"
+]
 
 [project.scripts]
 comicfuryscraper = "comicfuryscraper.cli:main"
