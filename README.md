@@ -27,6 +27,8 @@ A powerful command-line tool to scrape and download comics from ComicFury.com, c
 
 ### Installing
 
+#### Method 1: From python code
+
 1. Clone this repository or download the source code:
 
 ```
@@ -41,7 +43,32 @@ pip install -r requirements.txt
 cd src
 ```
 
-or download the executable at the [release page](https://github.com/enzomtpYT/ComicFury-AutoCBZ/releases/latest)
+3. To use you have to execute following command in terminal:
+```
+python cli.py
+```
+
+#### Method 2: From github releases
+
+1. Download the executable at the [release page](https://github.com/enzomtpYT/ComicFury-AutoCBZ/releases/latest)
+
+2. To use you have to execute following command in terminal:
+```
+comicfuryscraper.exe
+```
+
+#### Method 3: From pip install
+
+1. Install pip package
+```
+pip install comicfuryscraper
+```
+
+2. To use you have to execute following command in terminal:
+
+```
+comicfuryscraper
+```
 
 ## Usage
 
@@ -51,7 +78,7 @@ Get the comic ID from the profile page
 
 ![URL Bar](https://github.com/enzomtpYT/ComicFury-Scrape/assets/40535918/78a2e591-6b3a-4fc0-b32f-ac79fac628dc)
 
-Then execute:
+Then execute (depending on how you installed it):
 
 ```
 python cli.py -i COMIC_ID -d
@@ -61,6 +88,12 @@ OR
 
 ```
 comicfuryscraper.exe -i COMIC_ID -d
+```
+
+OR
+
+```
+comicfuryscraper -i COMIC_ID -d
 ```
 
 ### Command Line Arguments
