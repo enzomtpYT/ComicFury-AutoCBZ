@@ -1,0 +1,19 @@
+[project]
+name = "comicfuryscraper"
+version = "1.0.0"
+description = "A simple terminal CLI app"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [{name = "enzomtpYT", email = "contact@enzomtp.party"}]
+dependencies = [
+    "requests",
+    "beautifulsoup4"
+]
+
+[project.scripts]
+comicfuryscraper = "src.cli:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

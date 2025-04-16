@@ -1,4 +1,4 @@
-# Comic Scraper
+# ComicFury Scraper
 
 A powerful command-line tool to scrape and download comics from ComicFury.com, creating neatly organized CBZ files for offline reading.
 
@@ -38,6 +38,7 @@ cd ComicsInfiniteScroll
 
 ```
 pip install -r requirements.txt
+cd src
 ```
 
 or download the executable at the [release page](https://github.com/enzomtpYT/ComicFury-AutoCBZ/releases/latest)
@@ -59,7 +60,7 @@ python cli.py -i COMIC_ID -d
 OR
 
 ```
-ComicScraper.exe -i COMIC_ID -d
+comicfuryscraper.exe -i COMIC_ID -d
 ```
 
 ### Command Line Arguments
