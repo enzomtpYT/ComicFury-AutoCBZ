@@ -8,7 +8,8 @@ license = "MIT"
 authors = [{name = "enzomtpYT", email = "contact@enzomtp.party"}]
 dependencies = [
     "requests",
-    "beautifulsoup4"
+    "beautifulsoup4",
+    "mechanicalsoup"
 ]
 urls = {repository = "https://github.com/enzomtpYT/ComicFury-AutoCBZ"}
 keywords = [
