@@ -93,7 +93,7 @@ class ComicScraper:
             print(f"Failed to retrieve the page. Status code: {response.status_code}")
             return []
     
-    def scrapePages(self, chapter_url):
+    def scrapePages(self, chapter_url, recursive = False):
         """
         Scrapes all pages from a chapter and returns a list of page URLs
         """
@@ -101,13 +101,28 @@ class ComicScraper:
         
         # Send a GET request to the chapter URL
         response = requests.get(chapter_url)
-        
         pages = []
+        # Collect extra pages separately so as not to mess up the order
+        extra_pages = []
         
         # Check if the request was successful
         if response.status_code == 200:
             # Parse the HTML content of the page
             soup = BeautifulSoup(response.text, 'html.parser')
+            
+            extra_vfpages = []
+            # Also add pages that are hidden behind pagination
+            if not recursive:
+                for vfpage in soup.find_all('a', class_='vfpage'):
+                    vfpage_url = vfpage['href']
+                    if vfpage_url.startswith('/'):
+                        vfpage_url = 'https://comicfury.com' + vfpage_url
+                    # Pagination links appear twice (top and bottom); deduplicate
+                    if vfpage_url not in extra_vfpages:
+                        extra_vfpages.append(vfpage_url)
+                
+                for vfpage in extra_vfpages:
+                    extra_pages.extend(self.scrapePages(vfpage_url, recursive = True))
             
             # Find all chapters links in the archive
             pages_el = []
@@ -131,20 +146,21 @@ class ComicScraper:
                 results = {}
                 # Submit tasks to the executor
                 for i, page in enumerate(pages):
-                    future = executor.submit(self.scrapeImage, page['page_url'])
+                    future = executor.submit(self.scrapeImages, page['page_url'])
                     results[i] = future
                 
                 # Collect results as they complete
                 for i, future in results.items():
                     pages[i]['img_url'] = future.result()
             
-            print(f"Found {len(pages)} pages in chapter.")
-            return pages
+            if not recursive:
+                print(f"Found {len(pages + extra_pages)} pages in chapter.")
+            return pages + extra_pages
         else:
             print(f"Failed to retrieve the chapter page. Status code: {response.status_code}")
             return []
     
-    def scrapeImage(self, page_url):
+    def scrapeImages(self, page_url):
         """
         Scrapes all images from a page and returns a list of image URLs
         """
@@ -152,22 +168,25 @@ class ComicScraper:
         
         # Send a GET request to the page URL
         response = requests.get(page_url)
-             
+        
         # Check if the request was successful
         if response.status_code == 200:
             # Parse the HTML content of the page
             soup = BeautifulSoup(response.text, 'html.parser')
+            # Find the first page, since ComicFury loads multiple pages
+            comic = soup.find('div', class_='is--comic-page')
             
+            img_urls = []
             # Find all image tags in the page that start with the specified URL
-            for img_tag in soup.find_all('img'):
+            for img_tag in comic.find_all('img'):
                 img_url = img_tag['src']
                 # Check if the image URL starts with the desired prefix
                 if img_url.startswith('https://img.comicfury.com/comics/'):
-                    return img_url
-            return None
+                    img_urls.append(img_url)
+            return img_urls
         else:
             print(f"Failed to retrieve the page. Status code: {response.status_code}")
-            return None
+            return []
     
     def download_chapters(self, chapters):
         """
@@ -210,12 +229,12 @@ class ComicScraper:
         # Download all pages in the chapter
         with ThreadPoolExecutor(max_workers=self.max_threads) as executor:
             futures = []
-            for i, page in enumerate(chapter['pages']):
-                if page['img_url']:
+            for page_idx, page in enumerate(chapter['pages']):
+                for img_idx, img_url in enumerate(page['img_url']):
                     # Use zero-padded index to ensure correct order
-                    page_filename = f"{i:03d}.jpg"
+                    page_filename = f"{page_idx:03d}-{img_idx:02d}.jpg"
                     page_path = os.path.join(chapter_dir, page_filename)
-                    futures.append(executor.submit(self.download_image, page['img_url'], page_path))
+                    futures.append(executor.submit(self.download_image, img_url, page_path))
             
             # Wait for all downloads to complete
             for future in futures:
