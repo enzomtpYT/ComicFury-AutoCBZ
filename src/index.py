@@ -1,4 +1,4 @@
-import requests, re, shutil, os, zipfile, json
+import requests, re, shutil, os, zipfile, json, mechanicalsoup
 from bs4 import BeautifulSoup
 from concurrent.futures import ThreadPoolExecutor
 
@@ -48,8 +48,12 @@ class ComicScraper:
         # If no JSON file or loading failed, scrape from website
         print(f"Scraping chapters from: {self.url}")
         
+        session = requests.session()
+        browser = mechanicalsoup.StatefulBrowser()
+        page
+
         # Send a GET request to the URL
-        response = requests.get(self.url)
+        response = session.get(self.url, cookies={'webcomic_warnings': '62067'})
         
         # Check if the request was successful
         if response.status_code == 200:
@@ -100,7 +104,9 @@ class ComicScraper:
         self.log(f"Scraping pages from chapter: {chapter_url}")
         
         # Send a GET request to the chapter URL
-        response = requests.get(chapter_url)
+        session = requests.session()
+        response = session.get(chapter_url, cookies={'webcomic_warnings': '62067'})
+        
         pages = []
         # Collect extra pages separately so as not to mess up the order
         extra_pages = []
@@ -167,8 +173,9 @@ class ComicScraper:
         self.log(f"Scraping images from page: {page_url}")
         
         # Send a GET request to the page URL
-        response = requests.get(page_url)
-        
+        session = requests.session()
+        response = session.get(page_url, cookies={'webcomic_warnings': '62067'})
+             
         # Check if the request was successful
         if response.status_code == 200:
             # Parse the HTML content of the page
@@ -264,7 +271,7 @@ class ComicScraper:
         Downloads an image from a URL and saves it to the specified path
         """
         try:
-            response = requests.get(img_url, stream=True)
+            response = session.get(img_url, stream=True)
             if response.status_code == 200:
                 with open(save_path, 'wb') as f:
                     for chunk in response.iter_content(chunk_size=8192):
