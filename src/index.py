@@ -1,6 +1,8 @@
-import requests, re, shutil, os, zipfile, json, mechanicalsoup
+import requests, re, shutil, os, zipfile, json, time, mechanicalsoup
 from bs4 import BeautifulSoup
 from concurrent.futures import ThreadPoolExecutor
+from requests.adapters import HTTPAdapter
+from urllib3.util import Retry
 
 class ComicScraper:
     def __init__(self, url, max_threads=4, download_dir="downloads", verbose=False, id=None):
@@ -11,8 +13,24 @@ class ComicScraper:
         self.id = id
         self.json_path = f"{id}-chapters.json" if id else "chapters.json"
         self.session = requests.Session()
+
+        retries = Retry(
+            total=5,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504],
+            raise_on_status=False
+        )
+        adapter = HTTPAdapter(
+            pool_connections=max(16, self.max_threads * 2),
+            pool_maxsize=max(16, self.max_threads * 2),
+            max_retries=retries
+        )
+        self.session.mount("http://", adapter)
+        self.session.mount("https://", adapter)
+
         self.session.headers.update({
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 ComicFury-AutoCBZ/1.1.0"
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 ComicFury-AutoCBZ/1.1.0",
+            "Referer": "https://comicfury.com/"
         })
     
     def _fetch_url(self, url):
@@ -283,24 +301,27 @@ class ComicScraper:
         
         print(f"Completed: {cbz_filename}")
     
-    def download_image(self, img_url, save_path):
+    def download_image(self, img_url, save_path, max_retries=3):
         """
-        Downloads an image from a URL and saves it to the specified path
+        Downloads an image from a URL and saves it to the specified path with retries
         """
-        try:
-            response = self.session.get(img_url, stream=True)
-            if response.status_code == 200:
-                with open(save_path, 'wb') as f:
-                    for chunk in response.iter_content(chunk_size=8192):
-                        if chunk:
-                            f.write(chunk)
-                return True
-            else:
-                print(f"Failed to download image: {img_url}. Status code: {response.status_code}")
-                return False
-        except Exception as e:
-            print(f"Error downloading image {img_url}: {str(e)}")
-            return False
+        for attempt in range(max_retries):
+            try:
+                response = self.session.get(img_url, stream=True, timeout=30)
+                if response.status_code == 200:
+                    with open(save_path, 'wb') as f:
+                        for chunk in response.iter_content(chunk_size=8192):
+                            if chunk:
+                                f.write(chunk)
+                    return True
+                else:
+                    self.log(f"Attempt {attempt + 1}: Failed to download image {img_url}. Status code: {response.status_code}")
+            except Exception as e:
+                self.log(f"Attempt {attempt + 1}: Error downloading image {img_url}: {str(e)}")
+            time.sleep(1 * (attempt + 1))
+        
+        print(f"Failed to download image after {max_retries} attempts: {img_url}")
+        return False
     
     def get_safe_filename(self, filename):
         """

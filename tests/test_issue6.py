@@ -24,5 +24,5 @@ def test_download_image_uses_session(tmp_path):
     success = scraper.download_image("https://img.comicfury.com/comics/123.jpg", str(dest))
 
     assert success is True
-    scraper.session.get.assert_called_once_with("https://img.comicfury.com/comics/123.jpg", stream=True)
+    scraper.session.get.assert_called_once_with("https://img.comicfury.com/comics/123.jpg", stream=True, timeout=30)
     assert dest.read_bytes() == b"fake_image_bytes"
