@@ -7,7 +7,10 @@ import sys
 try:
     from .index import ComicScraper
 except (ImportError, ValueError):
-    from comicfuryscraper.index import ComicScraper  # ty: ignore[unresolved-import]
+    try:
+        from comicfuryscraper.index import ComicScraper  # ty: ignore[unresolved-import]
+    except ImportError:
+        from index import ComicScraper  # ty: ignore[unresolved-import]
 
 
 def parse_comic_target(url=None, comic_id=None):
