@@ -1,5 +1,8 @@
 import argparse, sys, json, os
-from index import ComicScraper
+try:
+    from comicfuryscraper.index import ComicScraper
+except ImportError:
+    from index import ComicScraper
 
 def main():
     print("Comic Scraper CLI V1.0.1 by enzomtpYT\n\n")
