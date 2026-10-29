@@ -194,3 +194,25 @@ etc...
 ## Contributing
 
 Contributions, issues, and feature requests are welcome!
+
+### Development Setup
+
+1. Install dependencies and dev tools using `uv`:
+```bash
+uv sync
+```
+
+2. Verify code quality and types before submitting a pull request:
+```bash
+# Run linting and code style checks
+uv run ruff check .
+
+# Run static type checking
+uv run ty check .
+
+# Check for unused code or dead imports
+uv run vulture
+
+# Run automated tests
+uv run pytest
+```

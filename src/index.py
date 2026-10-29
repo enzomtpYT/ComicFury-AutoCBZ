@@ -1,8 +1,16 @@
-import requests, re, shutil, os, zipfile, json, time, mechanicalsoup
-from bs4 import BeautifulSoup
+import json
+import os
+import re
+import shutil
+import time
+import zipfile
 from concurrent.futures import ThreadPoolExecutor
+
+import requests
+from bs4 import BeautifulSoup
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
+
 
 class ComicScraper:
     def __init__(self, url, max_threads=4, download_dir="downloads", verbose=False, id=None):
@@ -41,12 +49,12 @@ class ComicScraper:
         response = self.session.get(url)
         if response.status_code == 200 and "Content Warning" in response.text:
             soup = BeautifulSoup(response.text, 'html.parser')
-            form = soup.find('form', action=lambda a: a and '/read/' in a)
+            form = soup.find('form', attrs={'action': lambda a: bool(a and '/read/' in a)})
             if form:
-                action = form.get('action')
+                action = str(form.get('action', ''))
                 post_url = f"https://comicfury.com{action}" if action.startswith('/') else action
-                token_input = form.find('input', {'name': 'token'})
-                token_val = token_input.get('value') if token_input else ''
+                token_input = form.find('input', attrs={'name': 'token'})
+                token_val = str(token_input.get('value', '')) if token_input else ''
                 data = {'token': token_val, 'proceed': 'View Webcomic'}
                 self.log(f"Content Warning encountered. Submitting confirmation token to {post_url}...")
                 response = self.session.post(post_url, data=data)
@@ -72,7 +80,7 @@ class ComicScraper:
                 print(f"Loaded {len(chapters)} chapters from JSON file.")
                 return chapters
             except Exception as e:
-                print(f"Error loading chapters from JSON: {str(e)}")
+                print(f"Error loading chapters from JSON: {e!s}")
                 return None
         return None
     
@@ -107,7 +115,7 @@ class ComicScraper:
             # Extract chapters titles and URLs
             for element in chapter_el:
                 title = element.text.strip()
-                chapter_url = element['href']
+                chapter_url = str(element['href'])
                 # Check if the URL is relative and prepend the base URL if necessary
                 if chapter_url.startswith('/'):
                     chapter_url = 'https://comicfury.com' + chapter_url                
@@ -156,14 +164,14 @@ class ComicScraper:
             # Also add pages that are hidden behind pagination
             if not recursive:
                 for vfpage in soup.find_all('a', class_='vfpage'):
-                    vfpage_url = vfpage['href']
+                    vfpage_url = str(vfpage['href'])
                     if vfpage_url.startswith('/'):
                         vfpage_url = 'https://comicfury.com' + vfpage_url
                     # Pagination links appear twice (top and bottom); deduplicate
                     if vfpage_url not in extra_vfpages:
                         extra_vfpages.append(vfpage_url)
                 
-                for vfpage in extra_vfpages:
+                for vfpage_url in extra_vfpages:
                     extra_pages.extend(self.scrapePages(vfpage_url, recursive = True))
             
             # Find all chapters links in the archive
@@ -174,8 +182,9 @@ class ComicScraper:
             
             # Extract pages URLs without images first
             for element in pages_el:
-                page_url = element['href']
-                title = element.find('span').text.strip() if element.find('span') else ''
+                page_url = str(element['href'])
+                span = element.find('span')
+                title = span.text.strip() if span else ''
                 # Check if the URL is relative and prepend the base URL if necessary
                 if page_url.startswith('/'):
                     page_url = 'https://comicfury.com' + page_url
@@ -219,12 +228,13 @@ class ComicScraper:
             comic = soup.find('div', class_='is--comic-page')
             
             img_urls = []
-            # Find all image tags in the page that start with the specified URL
-            for img_tag in comic.find_all('img'):
-                img_url = img_tag['src']
-                # Check if the image URL starts with the desired prefix
-                if img_url.startswith('https://img.comicfury.com/comics/'):
-                    img_urls.append(img_url)
+            if comic:
+                # Find all image tags in the page that start with the specified URL
+                for img_tag in comic.find_all('img'):
+                    img_url = str(img_tag.get('src', ''))
+                    # Check if the image URL starts with the desired prefix
+                    if img_url.startswith('https://img.comicfury.com/comics/'):
+                        img_urls.append(img_url)
             return img_urls
         else:
             print(f"Failed to retrieve the page. Status code: {response.status_code}")
@@ -317,7 +327,7 @@ class ComicScraper:
                 else:
                     self.log(f"Attempt {attempt + 1}: Failed to download image {img_url}. Status code: {response.status_code}")
             except Exception as e:
-                self.log(f"Attempt {attempt + 1}: Error downloading image {img_url}: {str(e)}")
+                self.log(f"Attempt {attempt + 1}: Error downloading image {img_url}: {e!s}")
             time.sleep(1 * (attempt + 1))
         
         print(f"Failed to download image after {max_retries} attempts: {img_url}")

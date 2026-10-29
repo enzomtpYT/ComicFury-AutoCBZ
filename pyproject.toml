@@ -33,6 +33,9 @@ keywords = [
 [dependency-groups]
 dev = [
     "pytest>=8.0.0",
+    "ruff>=0.17.3",
+    "ty>=0.0.95",
+    "vulture>=2.16",
 ]
 
 [project.scripts]
@@ -45,4 +48,16 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 packages = ["comicfuryscraper"]
 package-dir = {"comicfuryscraper" = "src"}
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+ignore = ["BLE001"]
+
+[tool.vulture]
+min_confidence = 80
+paths = ["src/"]
+
 

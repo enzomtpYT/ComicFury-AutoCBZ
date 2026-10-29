@@ -1,8 +1,13 @@
-import argparse, sys, json, os, re
+import argparse
+import json
+import os
+import re
+import sys
+
 try:
-    from comicfuryscraper.index import ComicScraper
-except ImportError:
-    from index import ComicScraper
+    from .index import ComicScraper
+except (ImportError, ValueError):
+    from comicfuryscraper.index import ComicScraper  # ty: ignore[unresolved-import]
 
 
 def parse_comic_target(url=None, comic_id=None):
@@ -94,7 +99,7 @@ def main():
             
             print(f"Loaded {len(chapters)} chapters from {args.json}")
         except Exception as e:
-            print(f"Error loading JSON file: {str(e)}")
+            print(f"Error loading JSON file: {e!s}")
             sys.exit(1)
     
     # If no JSON file or we need URL/ID for other purposes
@@ -118,7 +123,7 @@ def main():
                 chapters = json.load(f)
             print(f"Using chapters from {args.json}")
         except Exception as e:
-            print(f"Error loading JSON file: {str(e)}")
+            print(f"Error loading JSON file: {e!s}")
             sys.exit(1)
     else:
         # Otherwise try to load from default location or scrape

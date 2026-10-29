@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock
+
 import requests
-from comicfuryscraper import ComicScraper
+from comicfuryscraper import ComicScraper  # ty: ignore[unresolved-import]
 
 
 def test_import():

@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock
-from comicfuryscraper.cli import parse_comic_target
-from comicfuryscraper import ComicScraper
+
+from comicfuryscraper import ComicScraper  # ty: ignore[unresolved-import]
+from comicfuryscraper.cli import parse_comic_target  # ty: ignore[unresolved-import]
 
 
 def test_parse_comic_target_thecomicseries():
