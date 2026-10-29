@@ -12,8 +12,27 @@ class ComicScraper:
         self.json_path = f"{id}-chapters.json" if id else "chapters.json"
         self.session = requests.Session()
         self.session.headers.update({
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 ComicFury-AutoCBZ/1.0.1"
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 ComicFury-AutoCBZ/1.1.0"
         })
+    
+    def _fetch_url(self, url):
+        """
+        Sends a GET request using the shared session, automatically handling
+        ComicFury content warning confirmations if encountered.
+        """
+        response = self.session.get(url)
+        if response.status_code == 200 and "Content Warning" in response.text:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            form = soup.find('form', action=lambda a: a and '/read/' in a)
+            if form:
+                action = form.get('action')
+                post_url = f"https://comicfury.com{action}" if action.startswith('/') else action
+                token_input = form.find('input', {'name': 'token'})
+                token_val = token_input.get('value') if token_input else ''
+                data = {'token': token_val, 'proceed': 'View Webcomic'}
+                self.log(f"Content Warning encountered. Submitting confirmation token to {post_url}...")
+                response = self.session.post(post_url, data=data)
+        return response
     
     def log(self, message):
         """
@@ -53,7 +72,7 @@ class ComicScraper:
         print(f"Scraping chapters from: {self.url}")
         
         # Send a GET request to the URL
-        response = self.session.get(self.url, cookies={'webcomic_warnings': '62067'})
+        response = self._fetch_url(self.url)
         
         # Check if the request was successful
         if response.status_code == 200:
@@ -104,7 +123,7 @@ class ComicScraper:
         self.log(f"Scraping pages from chapter: {chapter_url}")
         
         # Send a GET request to the chapter URL
-        response = self.session.get(chapter_url, cookies={'webcomic_warnings': '62067'})
+        response = self._fetch_url(chapter_url)
         
         pages = []
         # Collect extra pages separately so as not to mess up the order
@@ -172,7 +191,7 @@ class ComicScraper:
         self.log(f"Scraping images from page: {page_url}")
         
         # Send a GET request to the page URL
-        response = self.session.get(page_url, cookies={'webcomic_warnings': '62067'})
+        response = self._fetch_url(page_url)
              
         # Check if the request was successful
         if response.status_code == 200:
