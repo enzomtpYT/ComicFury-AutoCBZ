@@ -28,47 +28,57 @@ A powerful command-line tool to scrape and download comics from ComicFury.com, c
 
 ### Installing
 
-#### Method 1: From python code
+#### Method 1: Using `uv` (Recommended)
 
-1. Clone this repository or download the source code:
-
-```
+1. Clone this repository:
+```bash
 git clone https://github.com/enzomtpYT/ComicFury-AutoCBZ.git
-cd ComicsInfiniteScroll
+cd ComicFury-AutoCBZ
+```
+
+2. Run directly with `uv`:
+```bash
+uv run comicfuryscraper -h
+```
+Or install the dependencies with `uv sync`.
+
+#### Method 2: From python source (pip)
+
+1. Clone this repository:
+```bash
+git clone https://github.com/enzomtpYT/ComicFury-AutoCBZ.git
+cd ComicFury-AutoCBZ
 ```
 
 2. Install the required dependencies:
-
-```
+```bash
 pip install -r requirements.txt
-cd src
 ```
 
-3. To use you have to execute following command in terminal:
-```
-python cli.py
+3. Run the CLI:
+```bash
+python src/cli.py -h
 ```
 
-#### Method 2: From github releases
+#### Method 3: From github releases
 
 1. Download the executable at the [release page](https://github.com/enzomtpYT/ComicFury-AutoCBZ/releases/latest)
 
-2. To use you have to execute following command in terminal:
-```
-comicfuryscraper.exe
+2. To use, execute in terminal:
+```bash
+comicfuryscraper.exe -h
 ```
 
-#### Method 3: From pip install
+#### Method 4: From pip install
 
-1. Install pip package
-```
+1. Install pip package:
+```bash
 pip install comicfuryscraper
 ```
 
-2. To use you have to execute following command in terminal:
-
-```
-comicfuryscraper
+2. To use, execute in terminal:
+```bash
+comicfuryscraper -h
 ```
 
 ## Usage

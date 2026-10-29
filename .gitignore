@@ -3,3 +3,6 @@ downloads/
 build/
 dist/
 comicfuryscraper.egg-info/
+.venv/
+*-chapters.json
+*.cbz
