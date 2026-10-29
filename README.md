@@ -26,9 +26,64 @@ A powerful command-line tool to scrape and download comics from ComicFury.com, c
 - argparse
 - concurrent.futures (standard library)
 
-### Installing
+### Installing & Running
 
-#### Method 1: Using `uv` (Recommended)
+You can run `comicfuryscraper` using any of the following methods:
+
+#### Method 1: Instant run with `uvx` (Fastest, no installation needed)
+
+Run directly from PyPI in an ephemeral, isolated environment:
+```bash
+uvx comicfuryscraper -h
+```
+
+Download a comic directly:
+```bash
+uvx comicfuryscraper -i COMIC_ID -d
+```
+
+#### Method 2: Global CLI tool with `uv tool` or `pipx`
+
+Install `comicfuryscraper` as an isolated global CLI executable on your system:
+
+**Using `uv`:**
+```bash
+# Install globally
+uv tool install comicfuryscraper
+
+# Run from anywhere
+comicfuryscraper -h
+
+# To upgrade later
+uv tool upgrade comicfuryscraper
+```
+
+**Using `pipx`:**
+```bash
+# Run one-off without installing
+pipx run comicfuryscraper -h
+
+# Or install globally
+pipx install comicfuryscraper
+comicfuryscraper -h
+```
+
+#### Method 3: Pre-compiled standalone binaries (No Python required)
+
+Download the standalone executable for your operating system from the [Releases page](https://github.com/enzomtpYT/ComicFury-AutoCBZ/releases/latest):
+- **Linux**: `comicfuryscraper-linux-x86_64` (run `chmod +x comicfuryscraper-linux-x86_64`)
+- **Windows**: `comicfuryscraper.exe`
+- **macOS (Apple Silicon)**: `comicfuryscraper-macos-arm64`
+- **macOS (Intel)**: `comicfuryscraper-macos-x86_64`
+
+#### Method 4: Standard `pip install`
+
+```bash
+pip install comicfuryscraper
+comicfuryscraper -h
+```
+
+#### Method 5: From source (for development)
 
 1. Clone this repository:
 ```bash
@@ -40,72 +95,25 @@ cd ComicFury-AutoCBZ
 ```bash
 uv run comicfuryscraper -h
 ```
-Or install the dependencies with `uv sync`.
-
-#### Method 2: From python source (pip)
-
-1. Clone this repository:
-```bash
-git clone https://github.com/enzomtpYT/ComicFury-AutoCBZ.git
-cd ComicFury-AutoCBZ
-```
-
-2. Install the required dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-3. Run the CLI:
-```bash
-python src/cli.py -h
-```
-
-#### Method 3: From github releases
-
-1. Download the executable at the [release page](https://github.com/enzomtpYT/ComicFury-AutoCBZ/releases/latest)
-
-2. To use, execute in terminal:
-```bash
-comicfuryscraper.exe -h
-```
-
-#### Method 4: From pip install
-
-1. Install pip package:
-```bash
-pip install comicfuryscraper
-```
-
-2. To use, execute in terminal:
-```bash
-comicfuryscraper -h
-```
+Or install dependencies into a local venv using `uv sync` or `pip install -r requirements.txt`.
 
 ## Usage
 
 ### Basic Usage
 
-Get the comic ID from the profile page
+You can scrape comics by **Comic ID**, standard **ComicFury URL**, or **`thecomicseries.com` URL**:
 
-![URL Bar](https://github.com/enzomtpYT/ComicFury-Scrape/assets/40535918/78a2e591-6b3a-4fc0-b32f-ac79fac628dc)
-
-Then execute (depending on how you installed it):
-
-```
-python cli.py -i COMIC_ID -d
+1. **By Comic ID** (found in the comic profile URL, e.g. `comicprofile.php?url=COMIC_ID`):
+```bash
+uvx comicfuryscraper -i COMIC_ID -d
 ```
 
-OR
+2. **By URL** (supports `*.thecomicseries.com`, `comicprofile.php`, or canonical reader links):
+```bash
+uvx comicfuryscraper -u https://starting-over.thecomicseries.com -d
+```
 
-```
-comicfuryscraper.exe -i COMIC_ID -d
-```
-
-OR
-
-```
-comicfuryscraper -i COMIC_ID -d
-```
+*(Replace `uvx comicfuryscraper` with `comicfuryscraper`, `comicfuryscraper.exe`, or `uv run comicfuryscraper` depending on your chosen installation method).*
 
 ### Command Line Arguments
 
